@@ -8,6 +8,7 @@ const COLLECTION_NAME = "exercises";
 routerExercises.post("/", async (req, res) => {
 
     let exercise = req.body;
+    exercise.teacherId = req.infoApiKey.id;
 
     await database.connect();
 
@@ -24,8 +25,9 @@ routerExercises.post("/", async (req, res) => {
     res.status(200).json({ insertedId });
 });
 
-routerExercises.get("/list", async (req, res) => {
+routerExercises.get("/list/:lang", async (req, res) => {
 
+    let language = req.params.lang;
     let category = req.query.category;
 
     await database.connect();
@@ -33,7 +35,26 @@ routerExercises.get("/list", async (req, res) => {
     let exercises = null;
     try {
 
-        exercises = await database.readDocuments(COLLECTION_NAME, category ? { category: category } : {});
+        exercises = await database.readDocuments(COLLECTION_NAME, category ? { category, language } : { language });
+    } catch (e) {
+        return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+    } finally {
+        await database.disconnect();
+    }
+
+    res.status(200).json(exercises);
+});
+
+routerExercises.get("/teacher", async (req, res) => {
+
+    let teacherId = req.infoApiKey.id;
+
+    await database.connect();
+
+    let exercises = null;
+    try {
+
+        exercises = await database.readDocuments(COLLECTION_NAME, { teacherId });
     } catch (e) {
         return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
     } finally {
