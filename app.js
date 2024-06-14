@@ -1,8 +1,11 @@
-const express = require('express');
-const jwt = require("jsonwebtoken");
+let express = require('express');
 let cors = require('cors');
-const routerExercises = require('./routers/routerExercises');
+let mongoose = require('mongoose');
+let routerExercises = require('./routers/routerExercises');
+let routerCategories = require('./routers/routerCategories');
 let usersServiceURL = require("./Globals");
+
+mongoose.connect("mongodb+srv://uo271288:9Lh189zrKidsgWeR@hytex.ttqdwlm.mongodb.net/HYTEX?retryWrites=true&w=majority&appName=HYTEX");
 
 const port = 8082;
 const app = express();
@@ -11,14 +14,20 @@ app.use(cors());
 
 app.use(express.json());
 
-app.use(["/exercises"], async (req, res, next) => {
+app.use(["/"], async (req, res, next) => {
 
-    const excludePathPattern = /^\/list\/[^\/]+$/;
-
-    if (excludePathPattern.test(req.path)) {
+    if (req.path.includes("/list")) {
         return next();
     }
-    
+
+    if (req.method === 'GET' && !req.path.includes("/teacher")) {
+        return next();
+    }
+
+    if (req.path.includes("categories")) {
+        return next();
+    }
+
     let apiKey = req.query.apiKey;
     try {
         let response = await fetch(usersServiceURL + `/checkApiKey?apiKey=${apiKey}`, {
@@ -37,6 +46,7 @@ app.use(["/exercises"], async (req, res, next) => {
 });
 
 app.use("/exercises", routerExercises);
+app.use("/categories", routerCategories);
 
 app.listen(port, () => {
     console.log("Active server listening on port", port);
