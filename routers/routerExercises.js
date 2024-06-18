@@ -32,31 +32,12 @@ routerExercises.get("/list/:lang", async (req, res) => {
 routerExercises.post("/list/:lang", async (req, res) => {
 
     let language = req.params.lang;
-    let { categories, ages } = req.body;
+    let { category } = req.body;
 
     try {
         let exercises = await Exercise.find({ language });
-        if (categories && categories.length>0) {
-            exercises = exercises.filter(exercise =>
-                categories.some(category =>
-                    category.toUpperCase() === exercise.category.toUpperCase()
-                ));
-        }
-        if (ages && ages.length>0) {
-            exercises = exercises.filter(exercise =>
-                ages.some(age => {
-                    if (["3", "4"].includes(age)) {
-                        return "ICONIC" === exercise.representation.toUpperCase();
-                    }
-                    if (["5", "6"].includes(age)) {
-                        return "MIXED" === exercise.representation.toUpperCase();
-                    }
-                    if (["7", "8"].includes(age)) {
-                        return "SYMBOLIC" === exercise.representation.toUpperCase();
-                    }
-                    return false;
-                }
-                ));
+        if (category) {
+            exercises = exercises.filter(exercise => category.toUpperCase() === exercise.category.toUpperCase());
         }
         return res.status(200).json(exercises);
     } catch (e) {
