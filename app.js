@@ -2,10 +2,11 @@ let express = require('express');
 let cors = require('cors');
 let mongoose = require('mongoose');
 let routerExercises = require('./routers/routerExercises');
-let routerCategories = require('./routers/routerCategories');
 let usersServiceURL = require("./Globals");
 
-mongoose.connect("mongodb+srv://uo271288:9Lh189zrKidsgWeR@hytex.ttqdwlm.mongodb.net/HYTEX?retryWrites=true&w=majority&appName=HYTEX");
+
+// TODO: Remove credentials from here
+mongoose.connect("mongodb+srv://uo271288:I7OwYc8ZaKM5oEoX@hytex.a7k75.mongodb.net/exercisesDB?retryWrites=true&w=majority&appName=HYTEX");
 
 const port = 8082;
 const app = express();
@@ -46,7 +47,6 @@ app.use(["/"], async (req, res, next) => {
 });
 
 app.use("/exercises", routerExercises);
-app.use("/categories", routerCategories);
 
 app.listen(port, () => {
     console.log("Active server listening on port", port);

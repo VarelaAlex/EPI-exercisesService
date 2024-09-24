@@ -7,7 +7,7 @@ routerExercises.post("/", async (req, res) => {
 
     let exercise = req.body;
     if (req.infoApiKey) {
-        exercise.teacherId = req.infoApiKey.id;
+        exercise.teacherId = req.infoApiKey.id || null;
     }
     try {
         let exerciseRes = await Exercise.create(exercise);
@@ -31,14 +31,21 @@ routerExercises.get("/list/:lang", async (req, res) => {
 
 routerExercises.post("/list/:lang", async (req, res) => {
 
-    let language = req.params.lang;
-    let { category } = req.body;
+    let {lang} = req.params;
+    let { category, representation } = req.body;
 
     try {
-        let exercises = await Exercise.find({ language });
-        if (category) {
-            exercises = exercises.filter(exercise => category.toUpperCase() === exercise.category.toUpperCase());
+        let query = { language: lang };
+
+        if (category && representation) {
+            query = {
+                ...query,
+                category: category.toUpperCase(),
+                representation: representation.toUpperCase(),
+            };
         }
+
+        const exercises = await Exercise.find(query);
         return res.status(200).json(exercises);
     } catch (e) {
         return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
