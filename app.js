@@ -2,6 +2,7 @@ let express = require('express');
 let cors = require('cors');
 let mongoose = require('mongoose');
 let routerExercises = require('./routers/routerExercises');
+let routerStatistics = require('./routers/routerStatistics');
 let usersServiceURL = require("./Globals");
 
 
@@ -47,6 +48,7 @@ app.use(["/"], async (req, res, next) => {
 });
 
 app.use("/exercises", routerExercises);
+app.use("/statistics", routerStatistics);
 
 app.listen(port, () => {
     console.log("Active server listening on port", port);

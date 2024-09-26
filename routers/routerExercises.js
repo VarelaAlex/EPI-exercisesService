@@ -31,7 +31,7 @@ routerExercises.get("/list/:lang", async (req, res) => {
 
 routerExercises.post("/list/:lang", async (req, res) => {
 
-    let {lang} = req.params;
+    let { lang } = req.params;
     let { category, representation } = req.body;
 
     try {
