@@ -1,2 +1,4 @@
-let usersServiceURL = "http://localhost:8081";
+require('dotenv').config();
+
+let usersServiceURL = process.env.USERS_SERVICE_URL;
 module.exports = usersServiceURL;

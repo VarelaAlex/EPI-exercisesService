@@ -4,10 +4,18 @@ let mongoose = require('mongoose');
 let routerExercises = require('./routers/routerExercises');
 let routerStatistics = require('./routers/routerStatistics');
 let usersServiceURL = require("./Globals");
+const https = require('https');
+const fs = require('fs');
+require('dotenv').config()
 
+const options = {
+    key: fs.readFileSync('key.pem'),
+    cert: fs.readFileSync('cert.pem'),
+    passphrase: process.env.PASSPHRASE
+};
 
 // TODO: Remove credentials from here
-mongoose.connect("mongodb+srv://uo271288:I7OwYc8ZaKM5oEoX@hytex.a7k75.mongodb.net/exercisesDB?retryWrites=true&w=majority&appName=HYTEX");
+mongoose.connect(process.env.MONGODB_URI);
 
 const port = 8082;
 const app = express();
@@ -50,6 +58,11 @@ app.use(["/"], async (req, res, next) => {
 app.use("/exercises", routerExercises);
 app.use("/statistics", routerStatistics);
 
+https.createServer(options, app).listen(port, () => {
+    console.log("Active server listening on port", port);
+});
+/*
 app.listen(port, () => {
     console.log("Active server listening on port", port);
 });
+*/
