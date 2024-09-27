@@ -4,15 +4,17 @@ let mongoose = require('mongoose');
 let routerExercises = require('./routers/routerExercises');
 let routerStatistics = require('./routers/routerStatistics');
 let usersServiceURL = require("./Globals");
-const https = require('https');
-const fs = require('fs');
+//const https = require('https');
+//const fs = require('fs');
 require('dotenv').config()
 
+/*
 const options = {
     key: fs.readFileSync('key.pem'),
     cert: fs.readFileSync('cert.pem'),
     passphrase: process.env.PASSPHRASE
 };
+*/
 
 // TODO: Remove credentials from here
 mongoose.connect(process.env.MONGODB_URI);
@@ -57,12 +59,11 @@ app.use(["/"], async (req, res, next) => {
 
 app.use("/exercises", routerExercises);
 app.use("/statistics", routerStatistics);
-
+/*
 https.createServer(options, app).listen(port, () => {
     console.log("Active server listening on port", port);
 });
-/*
+*/
 app.listen(port, () => {
     console.log("Active server listening on port", port);
 });
-*/
