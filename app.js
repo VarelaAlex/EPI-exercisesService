@@ -17,7 +17,7 @@ const options = {
 // TODO: Remove credentials from here
 mongoose.connect(process.env.MONGODB_URI);
 
-const port = 8082;
+const port = process.env.PORT;
 const app = express();
 
 app.use(cors());
