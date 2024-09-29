@@ -7,6 +7,9 @@ let FeedbackSchema = mongoose.Schema({
     level: {
         type: String,
     },
+    date: {
+        type: Date
+    },
     phase1: {
         elapsedTime: {
             type: Number,

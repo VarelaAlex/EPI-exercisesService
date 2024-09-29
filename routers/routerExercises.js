@@ -1,6 +1,5 @@
 const express = require('express');
 const Exercise = require('../models/Exercise.model');
-const { default: mongoose } = require('mongoose');
 
 const routerExercises = express.Router();
 
