@@ -4,14 +4,18 @@ let mongoose = require('mongoose');
 let routerExercises = require('./routers/routerExercises');
 let routerStatistics = require('./routers/routerStatistics');
 
-require('dotenv').config()
+require('dotenv').config();
 
 mongoose.connect(process.env.MONGODB_URI);
 
 const port = process.env.PORT;
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: 'https://hytex-front-production.up.railway.app',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+}));
 
 app.use(express.json());
 
