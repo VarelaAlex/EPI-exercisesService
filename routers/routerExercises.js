@@ -68,13 +68,13 @@ routerExercises.post("/list/:lang", async (req, res) => {
 
 routerExercises.get("/teacher", async (req, res) => {
 
-    let response = authenticateToken(req);
+    let response = await authenticateToken(req);
 
     let jsonData = await response?.json();
     if (response?.ok) {
         let teacherId = jsonData.id;
         try {
-            let exercises = await Exercise.find({ teacherId });
+            let exercises = await Exercise.find({ teacherId: { $exists: true, $eq: teacherId } });
             res.status(200).json(exercises);
         } catch (e) {
             return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
