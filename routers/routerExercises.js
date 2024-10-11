@@ -72,7 +72,7 @@ routerExercises.get("/teacher", async (req, res) => {
 
     let jsonData = await response?.json();
     if (response?.ok) {
-        let teacherId = jsonData.id;
+        let teacherId = jsonData.user.id;
         try {
             let exercises = await Exercise.find({ teacherId: { $exists: true, $eq: teacherId } });
             res.status(200).json(exercises);
@@ -94,7 +94,7 @@ routerExercises.put("/:exerciseId", async (req, res) => {
         let updated;
         try {
             let exerciseResponse = await Exercise.findById(exerciseId);
-            if (exerciseResponse.teacherId === jsonData.id) {
+            if (exerciseResponse.teacherId === jsonData.user.id) {
                 updated = await Exercise.findByIdAndUpdate(exerciseId, exercise, { new: true });
             } else { res.status(401).json({ message: "This exercise is not yours" }); }
             if (!updated) {
@@ -119,7 +119,7 @@ routerExercises.delete("/:exerciseId", async (req, res) => {
         let deleted;
         try {
             let exerciseResponse = await Exercise.findById(exerciseId);
-            if (exerciseResponse.teacherId === jsonData.id) {
+            if (exerciseResponse.teacherId == jsonData.user.id) {
                 deleted = await Exercise.findByIdAndDelete(exerciseId);
             } else { res.status(401).json({ message: "This exercise is not yours" }); }
             if (!deleted) {
