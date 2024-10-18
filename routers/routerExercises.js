@@ -21,6 +21,7 @@ routerExercises.post("/", async (req, res) => {
     let jsonData = await response?.json();
     if (response?.ok) {
         try {
+            req.body.teacherId = jsonData.user.id;
             let exerciseRes = await Exercise.create(req.body);
             res.status(200).json(exerciseRes);
         } catch (e) {

@@ -29,7 +29,13 @@ let FeedbackSchema = mongoose.Schema({
         incorrectOrderStop: {
             type: Number,
         },
-        spellingError: {
+        lexicalError: {
+            type: Number
+        },
+        syntacticError: {
+            type: Number
+        },
+        semanticError: {
             type: Number
         }
     },
@@ -52,7 +58,13 @@ let FeedbackSchema = mongoose.Schema({
         incorrectOrderStop: {
             type: Number,
         },
-        spellingError: {
+        lexicalError: {
+            type: Number
+        },
+        syntacticError: {
+            type: Number
+        },
+        semanticError: {
             type: Number
         }
     },
