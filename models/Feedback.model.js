@@ -4,7 +4,10 @@ let FeedbackSchema = mongoose.Schema({
     title: {
         type: String,
     },
-    level: {
+    representation: {
+        type: String,
+    },
+    networkType: {
         type: String,
     },
     date: {
@@ -14,19 +17,31 @@ let FeedbackSchema = mongoose.Schema({
         elapsedTime: {
             type: Number,
         },
-        elementOutOfBounds: {
+        incorrectOrderSintactic: {
             type: Number,
         },
-        incorrectPos: {
+        incorrectOrderSemantic: {
             type: Number,
         },
-        incorrectPosStop: {
+        incorrectOrderLexical: {
             type: Number,
         },
-        incorrectOrder: {
+        incorrectPosSintactic: {
             type: Number,
         },
-        incorrectOrderStop: {
+        incorrectPosSemantic: {
+            type: Number,
+        },
+        incorrectPosLexical: {
+            type: Number,
+        },
+        outOfBoundsSintactic: {
+            type: Number,
+        },
+        outOfBoundsSemantic: {
+            type: Number,
+        },
+        outOfBoundsLexical: {
             type: Number,
         },
         lexicalError: {
@@ -43,19 +58,31 @@ let FeedbackSchema = mongoose.Schema({
         elapsedTime: {
             type: Number,
         },
-        elementOutOfBounds: {
+        incorrectOrderSintactic: {
             type: Number,
         },
-        incorrectPos: {
+        incorrectOrderSemantic: {
             type: Number,
         },
-        incorrectPosStop: {
+        incorrectOrderLexical: {
             type: Number,
         },
-        incorrectOrder: {
+        incorrectPosSintactic: {
             type: Number,
         },
-        incorrectOrderStop: {
+        incorrectPosSemantic: {
+            type: Number,
+        },
+        incorrectPosLexical: {
+            type: Number,
+        },
+        outOfBoundsSintactic: {
+            type: Number,
+        },
+        outOfBoundsSemantic: {
+            type: Number,
+        },
+        outOfBoundsLexical: {
             type: Number,
         },
         lexicalError: {
