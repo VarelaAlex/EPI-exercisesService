@@ -96,16 +96,10 @@ let FeedbackSchema = mongoose.Schema({
         }
     },
     student: {
-        name: {
-            type: String,
-        },
-        age: {
+        studentId: {
             type: Number,
         },
-        lastName: {
-            type: String,
-        },
-        classroom: {
+        classroomId: {
             type: Number,
         }
     }
