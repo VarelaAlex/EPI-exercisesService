@@ -1,7 +1,7 @@
 let express = require('express');
 let cors = require('cors');
 let mongoose = require('mongoose');
-let routerExercises = require('./routers/routerExercises');
+let { routerExercises } = require('./routers/routerExercises');
 let routerStatistics = require('./routers/routerStatistics');
 
 require('dotenv').config();

@@ -1,140 +1,146 @@
-const express = require('express');
-const Exercise = require('../models/Exercise.model');
+const express = require("express");
+const Exercise = require("../models/Exercise.model");
 
 const routerExercises = express.Router();
 
-let authenticateToken = async (req) => {
-    let response = null;
-    try {
-        response = await fetch(process.env.USERS_SERVICE_URL + "/teachers/checkLogin", {
-            method: "GET",
-            headers: req.headers
-        });
-        return response;
-    } catch (e) {
-        return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-    }
+let authenticateToken = async (req, res) => {
+	let response = null;
+	try {
+		response = await fetch(process.env.USERS_SERVICE_URL + "/teachers/checkLogin", {
+			method: "GET", headers: req.headers
+		});
+		return response;
+	}
+	catch ( e ) {
+		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+	}
 };
 
 routerExercises.post("/", async (req, res) => {
-    let response = await authenticateToken(req);
-    let jsonData = await response?.json();
-    if (response?.ok) {
-        try {
-            req.body.teacherId = jsonData.user.id;
-            let exerciseRes = await Exercise.create(req.body);
-            res.status(200).json(exerciseRes);
-        } catch (e) {
-            return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-        }
-    } else {
-        return res.status(response.status).json({ error: jsonData.error });
-    }
+
+	let response = await authenticateToken(req, res);
+	let jsonData = await response?.json();
+	if ( response?.ok ) {
+		try {
+			req.body.teacherId = jsonData.user.id;
+			let exerciseRes = await Exercise.create(req.body);
+			return res.status(200).json(exerciseRes);
+		}
+		catch ( e ) {
+			return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+		}
+	} else {
+		return res.status(response.status).json({ error: jsonData.error });
+	}
 });
 
 routerExercises.get("/list/:lang", async (req, res) => {
 
-    let language = req.params.lang;
+	let language = req.params.lang;
 
-    try {
-        let exercises = await Exercise.find({ language });
-        res.status(200).json(exercises);
-    } catch (e) {
-        return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-    }
+	try {
+		let exercises = await Exercise.find({ language });
+		res.status(200).json(exercises);
+	}
+	catch ( e ) {
+		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+	}
 });
 
 routerExercises.post("/list/:lang", async (req, res) => {
 
-    let { lang } = req.params;
-    let { category, representation } = req.body;
+	let { lang } = req.params;
+	let { category, representation } = req.body;
 
-    try {
-        let query = { language: lang };
+	try {
+		let query = { language: lang };
 
-        if (category && representation) {
-            query = {
-                ...query,
-                category: category.toUpperCase(),
-                representation: representation.toUpperCase(),
-            };
-        }
+		if ( category && representation ) {
+			query = {
+				...query, category: category.toUpperCase(), representation: representation.toUpperCase()
+			};
+		}
 
-        const exercises = await Exercise.find(query);
-        return res.status(200).json(exercises);
-    } catch (e) {
-        return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-    }
+		const exercises = await Exercise.find(query);
+		return res.status(200).json(exercises);
+	}
+	catch ( e ) {
+		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+	}
 });
 
 routerExercises.get("/teacher", async (req, res) => {
 
-    let response = await authenticateToken(req);
+	let response = await authenticateToken(req, res);
 
-    let jsonData = await response?.json();
-    if (response?.ok) {
-        let teacherId = jsonData.user.id;
-        try {
-            let exercises = await Exercise.find({ teacherId: { $exists: true, $eq: teacherId } });
-            res.status(200).json(exercises);
-        } catch (e) {
-            return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-        }
-    } else {
-        return res.status(response.status).json({ error: jsonData.error });
-    }
+	let jsonData = await response?.json();
+	if ( response?.ok ) {
+		let teacherId = jsonData.user.id;
+		try {
+			let exercises = await Exercise.find({ teacherId: { $exists: true, $eq: teacherId } });
+			res.status(200).json(exercises);
+		}
+		catch ( e ) {
+			return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+		}
+	} else {
+		return res.status(response.status).json({ error: jsonData.error });
+	}
 });
 
 routerExercises.put("/:exerciseId", async (req, res) => {
 
-    let response = await authenticateToken(req);
-    let jsonData = await response?.json();
-    if (response?.ok) {
-        let exerciseId = req.params.exerciseId;
-        let exercise = req.body;
-        let updated;
-        try {
-            let exerciseResponse = await Exercise.findById(exerciseId);
-            if (exerciseResponse.teacherId === jsonData.user.id) {
-                updated = await Exercise.findByIdAndUpdate(exerciseId, exercise, { new: true });
-            } else { res.status(401).json({ message: "This exercise is not yours" }); }
-            if (!updated) {
-                res.status(404).json({ message: "Exercise not found" });
-            }
-            else {
-                res.status(200).json(updated);
-            }
-        } catch (e) {
-            return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-        }
-    } else {
-        return res.status(response.status).json({ error: jsonData.error });
-    }
+	let response = await authenticateToken(req, res);
+	let jsonData = await response?.json();
+	if ( response?.ok ) {
+		let exerciseId = req.params.exerciseId;
+		let exercise = req.body;
+		let updated;
+		try {
+			let exerciseResponse = await Exercise.findById(exerciseId);
+			if ( !exerciseResponse ) {
+				return res.status(404).json({ message: "Exercise not found" });
+			}
+			if ( exerciseResponse.teacherId === jsonData.user.id ) {
+				updated = await Exercise.findByIdAndUpdate(exerciseId, exercise, { new: true });
+				return res.status(200).json(updated);
+			} else {
+				return res.status(401).json({ message: "This exercise is not yours" });
+			}
+		}
+		catch ( e ) {
+			return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+		}
+	} else {
+		return res.status(response.status).json({ error: jsonData.error });
+	}
 });
 
 routerExercises.delete("/:exerciseId", async (req, res) => {
-    let response = await authenticateToken(req);
-    let jsonData = await response?.json();
-    if (response?.ok) {
-        let exerciseId = req.params.exerciseId;
-        let deleted;
-        try {
-            let exerciseResponse = await Exercise.findById(exerciseId);
-            if (exerciseResponse.teacherId == jsonData.user.id) {
-                deleted = await Exercise.findByIdAndDelete(exerciseId);
-            } else { res.status(401).json({ message: "This exercise is not yours" }); }
-            if (!deleted) {
-                res.status(404).json({ message: "Exercise not found" });
-            }
-            else {
-                res.status(200).json(deleted);
-            }
-        } catch (e) {
-            return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-        }
-    } else {
-        return res.status(response.status).json({ error: jsonData.error });
-    }
+
+	let response = await authenticateToken(req, res);
+	let jsonData = await response?.json();
+	if ( response?.ok ) {
+		let exerciseId = req.params.exerciseId;
+		let deleted;
+		try {
+			let exerciseResponse = await Exercise.findById(exerciseId);
+			if ( !exerciseResponse ) {
+				return res.status(404).json({ message: "Exercise not found" });
+			}
+			if ( exerciseResponse.teacherId === jsonData.user.id ) {
+				deleted = await Exercise.findByIdAndDelete(exerciseId);
+				return res.status(200).json(deleted);
+			} else {
+				return res.status(401).json({ message: "This exercise is not yours" });
+			}
+		}
+		catch ( e ) {
+			return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+		}
+	} else {
+		return res.status(response.status).json({ error: jsonData.error });
+	}
 });
 
-module.exports = routerExercises;
+module.exports = { routerExercises, authenticateToken };
