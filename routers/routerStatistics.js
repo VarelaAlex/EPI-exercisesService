@@ -37,78 +37,126 @@ routerStatistics.post("/", async (req, res) => {
 });
 
 routerStatistics.get("/classroom/:classroomId", async (req, res) => {
+
 	let classroomId = req.params.classroomId;
+	const networkTypeOrder = ["I-I", "I-II", "I-III"];
+	const representationOrder = ["ICONIC", "MIXED", "SYMBOLIC"];
 
-	try {
-		let feedbacks = await Feedback.find({ "student.classroomId": classroomId });
+	let feedbacks = await Feedback.find({ "student.classroomId": classroomId });
 
-		const networkTypeOrder = ["I-I", "I-II", "I-III"];
-		const representationOrder = ["ICONIC", "MIXED", "SYMBOLIC"];
+	// Initialize grouped data with counts for both network types and representations
+	let groupedData = networkTypeOrder.reduce((acc, type) => {
+		acc[type] = {
+			count: 0, // Count of feedbacks for this network type
+			representationCounts: representationOrder.reduce((repAcc, rep) => {
+				repAcc[rep] = 0; // Initialize representation counts to 0
+				return repAcc;
+			}, {}),
+			feedbacks: [] // Array to store feedbacks for sorting
+		};
+		return acc;
+	}, {});
 
-		feedbacks.sort((a, b) => {
-			const networkTypeComparison = networkTypeOrder.indexOf(a.networkType)
-			                              - networkTypeOrder.indexOf(b.networkType);
-			if ( networkTypeComparison !== 0 ) {
-				return networkTypeComparison;
+	// Group, count, and prepare for sorting
+	feedbacks.forEach((feedback) => {
+		if (groupedData[feedback.networkType]) {
+			const group = groupedData[feedback.networkType];
+			group.count++; // Increment count for the network type
+			if (group.representationCounts[feedback.representation] !== undefined) {
+				group.representationCounts[feedback.representation]++; // Increment representation count
 			}
+			group.feedbacks.push(feedback); // Add feedback to the group
+		}
+	});
 
-			return representationOrder.indexOf(a.representation) - representationOrder.indexOf(b.representation);
+	// Sort feedbacks within each group by representation order
+	networkTypeOrder.forEach((type) => {
+		groupedData[type].feedbacks.sort((a, b) => {
+			return (
+				representationOrder.indexOf(a.representation) -
+				representationOrder.indexOf(b.representation)
+			);
 		});
+	});
 
-		let stackedData = {};
-		let representationCounts = {};
+	let totalFeedbacks = feedbacks.length;
 
-		const totalFeedbacks = feedbacks.length;
+	res.status(200).json({ groupedData, totalFeedbacks });
 
-		feedbacks.forEach((feedback) => {
-			const representation = feedback.representation;
-			const networkType = feedback.networkType;
 
-			if ( !stackedData[ representation ] ) {
-				stackedData[ representation ] = {};
-			}
+	/*
+		try {
+			let feedbacks = await Feedback.find({ "student.classroomId": classroomId });
 
-			stackedData[ representation ][ networkType ] =
-				(
-					stackedData[ representation ][ networkType ] || 0
-				) + 1;
+			const networkTypeOrder = ["I-I", "I-II", "I-III"];
+			const representationOrder = ["ICONIC", "MIXED", "SYMBOLIC"];
 
-			representationCounts[ representation ] =
-				(
-					representationCounts[ representation ] || 0
-				) + 1;
-		});
+			feedbacks.sort((a, b) => {
+				const networkTypeComparison = networkTypeOrder.indexOf(a.networkType)
+											  - networkTypeOrder.indexOf(b.networkType);
+				if ( networkTypeComparison !== 0 ) {
+					return networkTypeComparison;
+				}
 
-		for ( let representation in stackedData ) {
-			let totalInRepresentation = representationCounts[ representation ];
+				return representationOrder.indexOf(a.representation) - representationOrder.indexOf(b.representation);
+			});
 
-			for ( let networkType in stackedData[ representation ] ) {
-				let count = stackedData[ representation ][ networkType ];
-				let percentage = (
+			let stackedData = {};
+			let representationCounts = {};
+
+			const totalFeedbacks = feedbacks.length;
+
+			feedbacks.forEach((feedback) => {
+				const representation = feedback.representation;
+				const networkType = feedback.networkType;
+
+				if ( !stackedData[ representation ] ) {
+					stackedData[ representation ] = {};
+				}
+
+				stackedData[ representation ][ networkType ] =
 					(
-						count / totalInRepresentation
-					) * 100
-				).toFixed(2);
-				stackedData[ representation ][ networkType ] = { count, percentage };
+						stackedData[ representation ][ networkType ] || 0
+					) + 1;
+
+				representationCounts[ representation ] =
+					(
+						representationCounts[ representation ] || 0
+					) + 1;
+			});
+
+			for ( let representation in stackedData ) {
+				let totalInRepresentation = representationCounts[ representation ];
+
+				for ( let networkType in stackedData[ representation ] ) {
+					let count = stackedData[ representation ][ networkType ];
+					let percentage = (
+						(
+							count / totalInRepresentation
+						) * 100
+					).toFixed(2);
+					stackedData[ representation ][ networkType ] = { count, percentage };
+				}
 			}
+
+			let representationPercentages = {};
+			for ( let representation in representationCounts ) {
+				let count = representationCounts[ representation ];
+				representationPercentages[ representation ] =
+					(
+						(
+							count / totalFeedbacks
+						) * 100
+					).toFixed(2);
+			}
+
+			res.status(200).json({ stackedData, representationPercentages, totalFeedbacks });
+		}
+		catch ( e ) {
+			return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
 		}
 
-		let representationPercentages = {};
-		for ( let representation in representationCounts ) {
-			let count = representationCounts[ representation ];
-			representationPercentages[ representation ] =
-				(
-					(
-						count / totalFeedbacks
-					) * 100
-				).toFixed(2);
-		}
-
-		res.status(200).json({ stackedData, representationPercentages, totalFeedbacks });
-	}
-	catch ( e ) {
-		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-	}
+	 */
 });
 
 routerStatistics.get("/student/:studentId", async (req, res) => {
