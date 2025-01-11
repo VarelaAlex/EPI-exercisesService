@@ -82,81 +82,6 @@ routerStatistics.get("/classroom/:classroomId", async (req, res) => {
 	let totalFeedbacks = feedbacks.length;
 
 	res.status(200).json({ groupedData, totalFeedbacks });
-
-
-	/*
-		try {
-			let feedbacks = await Feedback.find({ "student.classroomId": classroomId });
-
-			const networkTypeOrder = ["I-I", "I-II", "I-III"];
-			const representationOrder = ["ICONIC", "MIXED", "SYMBOLIC"];
-
-			feedbacks.sort((a, b) => {
-				const networkTypeComparison = networkTypeOrder.indexOf(a.networkType)
-											  - networkTypeOrder.indexOf(b.networkType);
-				if ( networkTypeComparison !== 0 ) {
-					return networkTypeComparison;
-				}
-
-				return representationOrder.indexOf(a.representation) - representationOrder.indexOf(b.representation);
-			});
-
-			let stackedData = {};
-			let representationCounts = {};
-
-			const totalFeedbacks = feedbacks.length;
-
-			feedbacks.forEach((feedback) => {
-				const representation = feedback.representation;
-				const networkType = feedback.networkType;
-
-				if ( !stackedData[ representation ] ) {
-					stackedData[ representation ] = {};
-				}
-
-				stackedData[ representation ][ networkType ] =
-					(
-						stackedData[ representation ][ networkType ] || 0
-					) + 1;
-
-				representationCounts[ representation ] =
-					(
-						representationCounts[ representation ] || 0
-					) + 1;
-			});
-
-			for ( let representation in stackedData ) {
-				let totalInRepresentation = representationCounts[ representation ];
-
-				for ( let networkType in stackedData[ representation ] ) {
-					let count = stackedData[ representation ][ networkType ];
-					let percentage = (
-						(
-							count / totalInRepresentation
-						) * 100
-					).toFixed(2);
-					stackedData[ representation ][ networkType ] = { count, percentage };
-				}
-			}
-
-			let representationPercentages = {};
-			for ( let representation in representationCounts ) {
-				let count = representationCounts[ representation ];
-				representationPercentages[ representation ] =
-					(
-						(
-							count / totalFeedbacks
-						) * 100
-					).toFixed(2);
-			}
-
-			res.status(200).json({ stackedData, representationPercentages, totalFeedbacks });
-		}
-		catch ( e ) {
-			return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-		}
-
-	 */
 });
 
 routerStatistics.get("/student/:studentId", async (req, res) => {
@@ -167,44 +92,78 @@ routerStatistics.get("/student/:studentId", async (req, res) => {
 
 		const totalFeedbacks = feedbacks.length;
 
-		let iconicMixedErrors = {
+		let iconicErrors = {
+			Lexical:   { incorrectOrder: 0, incorrectPos: 0, outOfBounds: 0 },
+			Syntactic: { incorrectOrder: 0, incorrectPos: 0, outOfBounds: 0 },
+			Semantic:  { incorrectOrder: 0, incorrectPos: 0, outOfBounds: 0 }
+		};
+
+		let mixedErrors = {
 			Lexical:   { incorrectOrder: 0, incorrectPos: 0, outOfBounds: 0 },
 			Syntactic: { incorrectOrder: 0, incorrectPos: 0, outOfBounds: 0 },
 			Semantic:  { incorrectOrder: 0, incorrectPos: 0, outOfBounds: 0 }
 		};
 		let symbolicErrors = { Lexical: 0, Syntactic: 0, Semantic: 0 };
 
-		let totalIconicMixedErrors = 0;
+		let totalIconicErrors = 0;
+		let totalMixedErrors = 0;
 		let totalSymbolicErrors = 0;
 
 		feedbacks.forEach((feedback) => {
 			const { representation } = feedback;
 
-			if ( representation === "MIXED" || representation === "ICONIC" ) {
+			if ( representation === "ICONIC" ) {
 				["phase1", "phase2"].forEach((phase) => {
 					if ( feedback[ phase ] ) {
 
-						iconicMixedErrors.Lexical.incorrectOrder += feedback[ phase ].incorrectOrderLexical || 0;
-						iconicMixedErrors.Lexical.incorrectPos += feedback[ phase ].incorrectPosLexical || 0;
-						iconicMixedErrors.Lexical.outOfBounds += feedback[ phase ].outOfBoundsLexical || 0;
+						iconicErrors.Lexical.incorrectOrder += feedback[ phase ].incorrectOrderLexical || 0;
+						iconicErrors.Lexical.incorrectPos += feedback[ phase ].incorrectPosLexical || 0;
+						iconicErrors.Lexical.outOfBounds += feedback[ phase ].outOfBoundsLexical || 0;
 
-						iconicMixedErrors.Syntactic.incorrectOrder += feedback[ phase ].incorrectOrderSintactic || 0;
-						iconicMixedErrors.Syntactic.incorrectPos += feedback[ phase ].incorrectPosSintactic || 0;
-						iconicMixedErrors.Syntactic.outOfBounds += feedback[ phase ].outOfBoundsSintactic || 0;
+						iconicErrors.Syntactic.incorrectOrder += feedback[ phase ].incorrectOrderSintactic || 0;
+						iconicErrors.Syntactic.incorrectPos += feedback[ phase ].incorrectPosSintactic || 0;
+						iconicErrors.Syntactic.outOfBounds += feedback[ phase ].outOfBoundsSintactic || 0;
 
-						iconicMixedErrors.Semantic.incorrectOrder += feedback[ phase ].incorrectOrderSemantic || 0;
-						iconicMixedErrors.Semantic.incorrectPos += feedback[ phase ].incorrectPosSemantic || 0;
-						iconicMixedErrors.Semantic.outOfBounds += feedback[ phase ].outOfBoundsSemantic || 0;
+						iconicErrors.Semantic.incorrectOrder += feedback[ phase ].incorrectOrderSemantic || 0;
+						iconicErrors.Semantic.incorrectPos += feedback[ phase ].incorrectPosSemantic || 0;
+						iconicErrors.Semantic.outOfBounds += feedback[ phase ].outOfBoundsSemantic || 0;
 
-						totalIconicMixedErrors += feedback[ phase ].incorrectOrderLexical || 0;
-						totalIconicMixedErrors += feedback[ phase ].incorrectPosLexical || 0;
-						totalIconicMixedErrors += feedback[ phase ].outOfBoundsLexical || 0;
-						totalIconicMixedErrors += feedback[ phase ].incorrectOrderSintactic || 0;
-						totalIconicMixedErrors += feedback[ phase ].incorrectPosSintactic || 0;
-						totalIconicMixedErrors += feedback[ phase ].outOfBoundsSintactic || 0;
-						totalIconicMixedErrors += feedback[ phase ].incorrectOrderSemantic || 0;
-						totalIconicMixedErrors += feedback[ phase ].incorrectPosSemantic || 0;
-						totalIconicMixedErrors += feedback[ phase ].outOfBoundsSemantic || 0;
+						totalIconicErrors += feedback[ phase ].incorrectOrderLexical || 0;
+						totalIconicErrors += feedback[ phase ].incorrectPosLexical || 0;
+						totalIconicErrors += feedback[ phase ].outOfBoundsLexical || 0;
+						totalIconicErrors += feedback[ phase ].incorrectOrderSintactic || 0;
+						totalIconicErrors += feedback[ phase ].incorrectPosSintactic || 0;
+						totalIconicErrors += feedback[ phase ].outOfBoundsSintactic || 0;
+						totalIconicErrors += feedback[ phase ].incorrectOrderSemantic || 0;
+						totalIconicErrors += feedback[ phase ].incorrectPosSemantic || 0;
+						totalIconicErrors += feedback[ phase ].outOfBoundsSemantic || 0;
+					}
+				});
+			} else if ( representation === "MIXED" ) {
+				["phase1", "phase2"].forEach((phase) => {
+					if ( feedback[ phase ] ) {
+
+						mixedErrors.Lexical.incorrectOrder += feedback[ phase ].incorrectOrderLexical || 0;
+						mixedErrors.Lexical.incorrectPos += feedback[ phase ].incorrectPosLexical || 0;
+						mixedErrors.Lexical.outOfBounds += feedback[ phase ].outOfBoundsLexical || 0;
+
+						mixedErrors.Syntactic.incorrectOrder += feedback[ phase ].incorrectOrderSintactic || 0;
+						mixedErrors.Syntactic.incorrectPos += feedback[ phase ].incorrectPosSintactic || 0;
+						mixedErrors.Syntactic.outOfBounds += feedback[ phase ].outOfBoundsSintactic || 0;
+
+						mixedErrors.Semantic.incorrectOrder += feedback[ phase ].incorrectOrderSemantic || 0;
+						mixedErrors.Semantic.incorrectPos += feedback[ phase ].incorrectPosSemantic || 0;
+						mixedErrors.Semantic.outOfBounds += feedback[ phase ].outOfBoundsSemantic || 0;
+
+						totalMixedErrors += feedback[ phase ].incorrectOrderLexical || 0;
+						totalMixedErrors += feedback[ phase ].incorrectPosLexical || 0;
+						totalMixedErrors += feedback[ phase ].outOfBoundsLexical || 0;
+						totalMixedErrors += feedback[ phase ].incorrectOrderSintactic || 0;
+						totalMixedErrors += feedback[ phase ].incorrectPosSintactic || 0;
+						totalMixedErrors += feedback[ phase ].outOfBoundsSintactic || 0;
+						totalMixedErrors += feedback[ phase ].incorrectOrderSemantic || 0;
+						totalMixedErrors += feedback[ phase ].incorrectPosSemantic || 0;
+						totalMixedErrors += feedback[ phase ].outOfBoundsSemantic || 0;
 					}
 				});
 			} else if ( representation === "SYMBOLIC" ) {
@@ -223,14 +182,28 @@ routerStatistics.get("/student/:studentId", async (req, res) => {
 			}
 		});
 
-		for ( let errorType in iconicMixedErrors ) {
-			for ( let error in iconicMixedErrors[ errorType ] ) {
-				let count = iconicMixedErrors[ errorType ][ error ];
-				iconicMixedErrors[ errorType ][ error ] = {
+		for ( let errorType in iconicErrors ) {
+			for ( let error in iconicErrors[ errorType ] ) {
+				let count = iconicErrors[ errorType ][ error ];
+				iconicErrors[ errorType ][ error ] = {
 					count,
-					percentage: totalIconicMixedErrors > 0 ? (
+					percentage: totalIconicErrors > 0 ? (
 						(
-							count / totalIconicMixedErrors
+							count / totalIconicErrors
+						) * 100
+					).toFixed(2) : "0.00"
+				};
+			}
+		}
+
+		for ( let errorType in mixedErrors ) {
+			for ( let error in mixedErrors[ errorType ] ) {
+				let count = mixedErrors[ errorType ][ error ];
+				mixedErrors[ errorType ][ error ] = {
+					count,
+					percentage: totalMixedErrors > 0 ? (
+						(
+							count / totalMixedErrors
 						) * 100
 					).toFixed(2) : "0.00"
 				};
@@ -249,40 +222,71 @@ routerStatistics.get("/student/:studentId", async (req, res) => {
 			};
 		}
 
-		const sumLexical = Object.values(iconicMixedErrors.Lexical).reduce((acc, value) => acc + value.count, 0);
-		const sumSyntactic = Object.values(iconicMixedErrors.Syntactic).reduce((acc, value) => acc + value.count, 0);
-		const sumSemantic = Object.values(iconicMixedErrors.Semantic).reduce((acc, value) => acc + value.count, 0);
+		const sumLexicalIconic = Object.values(iconicErrors.Lexical).reduce((acc, value) => acc + value.count, 0);
+		const sumSyntacticIconic = Object.values(iconicErrors.Syntactic).reduce((acc, value) => acc + value.count, 0);
+		const sumSemanticIconic = Object.values(iconicErrors.Semantic).reduce((acc, value) => acc + value.count, 0);
 
-		const iconicMixedErrorsTotal = sumLexical + sumSyntactic + sumSemantic;
-		let percentageLexical = (
+		const sumLexicalMixed = Object.values(mixedErrors.Lexical).reduce((acc, value) => acc + value.count, 0);
+		const sumSyntacticMixed = Object.values(mixedErrors.Syntactic).reduce((acc, value) => acc + value.count, 0);
+		const sumSemanticMixed = Object.values(mixedErrors.Semantic).reduce((acc, value) => acc + value.count, 0);
+
+		const iconicErrorsTotal = sumLexicalIconic + sumSyntacticIconic + sumSemanticIconic;
+		const mixedErrorsTotal = sumLexicalMixed + sumSyntacticMixed + sumSemanticMixed;
+
+		let percentageLexicalIconic = (
 			(
-				sumLexical / iconicMixedErrorsTotal
+				sumLexicalIconic / iconicErrorsTotal
 			) * 100
 		).toFixed(2);
-		let percentageSyntactic = (
+
+		let percentageSyntacticIconic = (
 			(
-				sumSyntactic / iconicMixedErrorsTotal
+				sumSyntacticIconic / iconicErrorsTotal
 			) * 100
 		).toFixed(2);
-		let percentageSemantic = (
+
+		let percentageSemanticIconic = (
 			(
-				sumSemantic / iconicMixedErrorsTotal
+				sumSemanticIconic / iconicErrorsTotal
+			) * 100
+		).toFixed(2);
+
+		let percentageLexicalMixed = (
+			(
+				sumLexicalMixed / mixedErrorsTotal
+			) * 100
+		).toFixed(2);
+
+		let percentageSyntacticMixed = (
+			(
+				sumSyntacticMixed / mixedErrorsTotal
+			) * 100
+		).toFixed(2);
+
+		let percentageSemanticMixed = (
+			(
+				sumSemanticMixed / mixedErrorsTotal
 			) * 100
 		).toFixed(2);
 
 		const symbolicErrorsTotal = Object.values(symbolicErrors).reduce((acc, value) => acc + value.count, 0);
 
 		res.status(200)
-		   .json({
-			         iconicMixedErrors,
-			         symbolicErrors,
-			         percentageLexical,
-			         percentageSyntactic,
-			         percentageSemantic,
-			         totalFeedbacks,
-			         iconicMixedErrorsTotal,
-			         symbolicErrorsTotal
-		         });
+			.json({
+				iconicErrors,
+				mixedErrors,
+				symbolicErrors,
+				percentageLexicalIconic,
+				percentageSyntacticIconic,
+				percentageSemanticIconic,
+				percentageLexicalMixed,
+				percentageSyntacticMixed,
+				percentageSemanticMixed,
+				totalFeedbacks,
+				iconicErrorsTotal,
+				mixedErrorsTotal,
+				symbolicErrorsTotal
+			});
 	}
 	catch ( e ) {
 		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
