@@ -52,6 +52,9 @@ let FeedbackSchema = mongoose.Schema({
         },
         semanticError: {
             type: Number
+        },
+        orderError:{
+            type: Number
         }
     },
     phase2: {
@@ -92,6 +95,9 @@ let FeedbackSchema = mongoose.Schema({
             type: Number
         },
         semanticError: {
+            type: Number
+        },
+        orderError:{
             type: Number
         }
     },

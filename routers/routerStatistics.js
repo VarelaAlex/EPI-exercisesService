@@ -5,7 +5,6 @@ const routerStatistics = express.Router();
 
 routerStatistics.post("/", async (req, res) => {
 
-	debugger
 	let { feedback } = req.body;
 
 	let response = null;
