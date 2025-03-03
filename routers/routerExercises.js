@@ -128,7 +128,7 @@ routerExercises.delete("/:exerciseId", async (req, res) => {
 			if ( !exerciseResponse ) {
 				return res.status(404).json({ message: "Exercise not found" });
 			}
-			if ( exerciseResponse.teacherId === jsonData.user.id ) {
+			if ( parseInt(exerciseResponse.teacherId) === parseInt(jsonData.user.id) ) {
 				deleted = await Exercise.findByIdAndDelete(exerciseId);
 				return res.status(200).json(deleted);
 			} else {
