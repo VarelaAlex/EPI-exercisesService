@@ -41,7 +41,13 @@ routerStatistics.get("/classroom/:classroomId", async (req, res) => {
 	const networkTypeOrder = ["I-I", "I-II", "I-III"];
 	const representationOrder = ["ICONIC", "MIXED", "SYMBOLIC"];
 
-	let feedbacks = await Feedback.find({ "student.classroomId": classroomId });
+	let feedbacks = null;
+
+	try {
+		feedbacks = await Feedback.find({ "student.classroomId": classroomId });
+	} catch ( e ){
+		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+	}
 
 	// Initialize grouped data with counts for both network types and representations
 	let groupedData = networkTypeOrder.reduce((acc, type) => {
