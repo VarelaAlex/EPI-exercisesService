@@ -3,16 +3,14 @@ const Exercise = require("../models/Exercise.model");
 
 const routerExercises = express.Router();
 
-let authenticateToken = async (req, res) => {
-	let response = null;
+authenticateToken = async (req, _res) => {
 	try {
-		response = await fetch(process.env.USERS_SERVICE_URL + "/teachers/checkLogin", {
-			method: "GET", headers: req.headers
+		return await fetch(process.env.USERS_SERVICE_URL + "/teachers/checkLogin", {
+			method: "GET",
+			headers: req.headers
 		});
-		return response;
-	}
-	catch ( e ) {
-		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
+	} catch (e) {
+		throw new Error(e.message);
 	}
 };
 
@@ -70,21 +68,21 @@ routerExercises.post("/list/:lang", async (req, res) => {
 });
 
 routerExercises.get("/teacher", async (req, res) => {
-
 	let response = await authenticateToken(req, res);
 
+	if (!response?.ok) {
+		let jsonData = await response?.json();
+		return res.status(response.status).json({ error: jsonData?.error });
+	}
+
 	let jsonData = await response?.json();
-	if ( response?.ok ) {
-		let teacherId = jsonData.user.id;
-		try {
-			let exercises = await Exercise.find({ teacherId: { $exists: true, $eq: teacherId } });
-			res.status(200).json(exercises);
-		}
-		catch ( e ) {
-			return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
-		}
-	} else {
-		return res.status(response.status).json({ error: jsonData.error });
+	let teacherId = jsonData.user.id;
+
+	try {
+		let exercises = await Exercise.find({ teacherId: { $exists: true, $eq: teacherId } });
+		return res.status(200).json(exercises);
+	} catch (e) {
+		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
 	}
 });
 
