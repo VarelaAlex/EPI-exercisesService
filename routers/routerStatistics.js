@@ -14,6 +14,8 @@ routerStatistics.post("/", async (req, res) => {
 		});
 	}
 	catch ( e ) {
+		console.log("content: "+response);
+		console.log(response);
 		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
 	}
 
@@ -31,6 +33,9 @@ routerStatistics.post("/", async (req, res) => {
 		res.status(200).json(feedbackRes);
 	}
 	catch ( e ) {
+		console.log("content: "+response);
+                console.log(response);
+		console.log(await response.json());
 		return res.status(500).json({ error: { type: "internalServerError", message: e.message } });
 	}
 });

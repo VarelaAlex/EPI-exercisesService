@@ -6,7 +6,9 @@ let routerStatistics = require('./routers/routerStatistics');
 
 require('dotenv').config();
 
-mongoose.connect(process.env.MONGODB_URI);
+const fs = require('fs');
+const uri = process.env.MONGODB_URI || fs.readFileSync(process.env.MONGODB_URI_FILE, 'utf8').trim();
+mongoose.connect(uri);
 
 const port = process.env.PORT;
 const app = express();
