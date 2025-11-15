@@ -67,6 +67,39 @@ routerExercises.post("/list/:lang", async (req, res) => {
 	}
 });
 
+routerExercises.post("/ids", async (req, res) => {
+    try {
+        const { representation, networkType } = req.body;
+
+        if (!representation || !networkType) {
+            return res.status(400).json({
+                error: {
+                    type: "badRequest",
+                    message: "Both 'representation' and 'networkType' are required."
+                }
+            });
+        }
+
+        const query = {
+            representation: representation.toUpperCase(),
+            networkType: networkType.toUpperCase(),
+            language: "es"
+        };
+
+        const exercises = await Exercise.find(query).select("_id");
+
+        return res.status(200).json(exercises);
+    }
+    catch (e) {
+        return res.status(500).json({
+            error: {
+                type: "internalServerError",
+                message: e.message
+            }
+        });
+    }
+});
+
 routerExercises.get("/teacher", async (req, res) => {
 	let response = await authenticateToken(req, res);
 

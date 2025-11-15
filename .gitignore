@@ -144,3 +144,5 @@ dist
 .idea/
 
 startEnv.js
+
+connect-mongo.sh
