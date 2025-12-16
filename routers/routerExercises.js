@@ -35,9 +35,17 @@ routerExercises.post("/", async (req, res) => {
 routerExercises.get("/list/:lang", async (req, res) => {
 
 	let language = req.params.lang;
+    let closedOrder = req.query.closedOrder;
 
 	try {
-		let exercises = await Exercise.find({ language });
+
+		let exercises
+        if (closedOrder) {
+            exercises = await Exercise.find({language}).sort({closedOrder:1});
+        }
+        else {
+            exercises = await Exercise.find({language});
+        }
 		res.status(200).json(exercises);
 	}
 	catch ( e ) {
@@ -67,28 +75,27 @@ routerExercises.post("/list/:lang", async (req, res) => {
 	}
 });
 
-routerExercises.post("/ids", async (req, res) => {
+routerExercises.get("/next/:closedOrder", async (req, res) => {
     try {
-        const { representation, networkType } = req.body;
+        const { closedOrder } = req.params;
 
-        if (!representation || !networkType) {
+        if (!closedOrder) {
             return res.status(400).json({
                 error: {
                     type: "badRequest",
-                    message: "Both 'representation' and 'networkType' are required."
+                    message: "Both 'closedOrder' is required."
                 }
             });
         }
 
         const query = {
-            representation: representation.toUpperCase(),
-            networkType: networkType.toUpperCase(),
+			closedOrder: parseInt(closedOrder) + 1,
             language: "es"
         };
 
-        const exercises = await Exercise.find(query).select("_id");
+        const exercise = await Exercise.findOne(query);
 
-        return res.status(200).json(exercises);
+        return res.status(200).json(exercise);
     }
     catch (e) {
         return res.status(500).json({

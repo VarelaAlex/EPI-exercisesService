@@ -146,3 +146,5 @@ dist
 startEnv.js
 
 connect-mongo.sh
+
+updateExercises.js

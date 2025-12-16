@@ -11,8 +11,7 @@ let ExerciseSchema = mongoose.Schema({
         required: [true, "category is required"]
     },
     mainImage: {
-        type: String,
-        required: [true, "mainImage is required"]
+        type: String
     },
     definitionImage: {
         type: String
@@ -55,6 +54,9 @@ let ExerciseSchema = mongoose.Schema({
     },
     teacherId: {
         type: String
+    },
+    closedOrder: {
+        type: Number
     }
 });
 
