@@ -92,6 +92,24 @@ describe("GET /exercises/list/:lang", () => {
 		const response = await request(app).get("/exercises/list/invalidLang");
 		expect(response.status).toBe(500);
 	});
+
+	it("should return exercises ordered by representation and networkType", async () => {
+		Exercise.find.mockResolvedValueOnce([
+			{ _id: "3", representation: "SYMBOLIC", networkType: "I-III" },
+			{ _id: "2", representation: "ICONIC", networkType: "I-II" },
+			{ _id: "1", representation: "ICONIC", networkType: "I-I" },
+			{ _id: "4", representation: "MIXED", networkType: "I-I" }
+		]);
+
+		const response = await request(app).get("/exercises/list/en");
+		expect(response.status).toBe(200);
+		expect(response.body.map(item => `${ item.representation }-${ item.networkType }`)).toEqual([
+			"ICONIC-I-I",
+			"ICONIC-I-II",
+			"MIXED-I-I",
+			"SYMBOLIC-I-III"
+		]);
+	});
 });
 
 describe("POST /exercises/list/:lang", () => {
@@ -137,6 +155,49 @@ describe("POST /exercises/list/:lang", () => {
 		Exercise.find.mockResolvedValueOnce([{ title: "Exercise 1" }]);
 		const response = await request(app).post("/exercises/list/en").send({ category: "Family" });
 		expect(response.status).toBe(200);
+	});
+
+	it("should return exercises ordered by representation and networkType", async () => {
+		Exercise.find.mockResolvedValueOnce([
+			{ _id: "a3", representation: "MIXED", networkType: "I-III" },
+			{ _id: "a1", representation: "MIXED", networkType: "I-I" },
+			{ _id: "a2", representation: "MIXED", networkType: "I-II" }
+		]);
+
+		const response = await request(app)
+			.post("/exercises/list/en")
+			.send({ category: "Family" });
+
+		expect(response.status).toBe(200);
+		expect(response.body.map(item => item.networkType)).toEqual(["I-I", "I-II", "I-III"]);
+	});
+});
+
+describe("GET /exercises/guided/:lang", () => {
+	it("should return guided list ordered by representation and networkType", async () => {
+		Exercise.find.mockResolvedValueOnce([
+			{ _id: "2", language: "en", representation: "MIXED", networkType: "I-II" },
+			{ _id: "1", language: "en", representation: "ICONIC", networkType: "I-I" }
+		]);
+
+		const response = await request(app).get("/exercises/guided/en");
+		expect(response.status).toBe(200);
+		expect(response.body[0]).toMatchObject({ representation: "ICONIC", networkType: "I-I", index: 0 });
+		expect(response.body[1]).toMatchObject({ representation: "ICONIC", networkType: "I-II", index: 1 });
+		expect(response.body[2]).toMatchObject({ representation: "MIXED", networkType: "I-I", index: 2 });
+	});
+});
+
+describe("GET /exercises/next/:index", () => {
+	it("should return next guided exercise preserving order", async () => {
+		Exercise.find.mockResolvedValueOnce([
+			{ _id: "2", language: "es", representation: "MIXED", networkType: "I-II" },
+			{ _id: "1", language: "es", representation: "ICONIC", networkType: "I-I" }
+		]);
+
+		const response = await request(app).get("/exercises/next/0?lang=es");
+		expect(response.status).toBe(200);
+		expect(response.body).toMatchObject({ representation: "ICONIC", networkType: "I-II", index: 1 });
 	});
 });
 

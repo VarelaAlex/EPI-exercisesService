@@ -5,6 +5,44 @@ const routerExercises = express.Router();
 
 const representationsOrder = ["ICONIC", "MIXED", "GLOBAL", "SYMBOLIC"];
 const networkOrder = ["I-I", "I-II", "I-III"];
+const representationRank = Object.fromEntries(representationsOrder.map((value, index) => [value, index]));
+const networkRank = Object.fromEntries(networkOrder.map((value, index) => [value, index]));
+
+const getRank = (rankMap, value) => {
+    if (!value || rankMap[value] === undefined) return Number.MAX_SAFE_INTEGER;
+    return rankMap[value];
+};
+
+const sortExercisesByRepresentationAndNetwork = (exercises = []) => {
+    return [...exercises].sort((a, b) => {
+        const representationDiff = getRank(representationRank, a?.representation) - getRank(representationRank, b?.representation);
+        if (representationDiff !== 0) return representationDiff;
+
+        const networkDiff = getRank(networkRank, a?.networkType) - getRank(networkRank, b?.networkType);
+        if (networkDiff !== 0) return networkDiff;
+
+        return String(a?._id || "").localeCompare(String(b?._id || ""));
+    });
+};
+
+const toPlainExercise = (exercise) => {
+    return typeof exercise?.toObject === "function" ? exercise.toObject() : exercise;
+};
+
+const buildGuidedList = (exercises = []) => {
+    const sortedExercises = sortExercisesByRepresentationAndNetwork(exercises);
+
+    return representationsOrder
+        .flatMap(rep => networkOrder.flatMap(network => sortedExercises
+            .filter(ex => ex.networkType === network)
+            .map(ex => ({
+                ...toPlainExercise(ex), representation: rep
+            }))
+        ))
+        .map((item, index) => ({
+            ...item, index
+        }));
+};
 
 let authenticateToken = async (req, _res) => {
     try {
@@ -46,7 +84,8 @@ routerExercises.get("/list/:lang", async (req, res) => {
         } else {
             exercises = await Exercise.find({language});
         }
-        res.status(200).json(exercises);
+        const sortedExercises = sortExercisesByRepresentationAndNetwork(exercises);
+        res.status(200).json(sortedExercises);
     } catch (e) {
         return res.status(500).json({error: {type: "internalServerError", message: e.message}});
     }
@@ -65,7 +104,8 @@ routerExercises.post("/list/:lang", async (req, res) => {
         if (representation) query.representation = representation.toUpperCase();
 
         const exercises = await Exercise.find(query);
-        return res.status(200).json(exercises);
+        const sortedExercises = sortExercisesByRepresentationAndNetwork(exercises);
+        return res.status(200).json(sortedExercises);
     } catch (e) {
         return res.status(500).json({error: {type: "internalServerError", message: e.message}});
     }
@@ -74,17 +114,13 @@ routerExercises.post("/list/:lang", async (req, res) => {
 routerExercises.get("/guided/:lang", async (req, res) => {
     const {lang} = req.params;
 
-    const exercises = await Exercise.find({language: lang});
-
-    const guidedList = representationsOrder.flatMap(rep => networkOrder.flatMap(network => exercises
-        .filter(ex => ex.networkType === network)
-        .map(ex => ({
-            ...ex.toObject(), representation: rep
-        })))).map((item, index) => ({
-        ...item, index
-    }));
-
-    res.json(guidedList);
+    try {
+        const exercises = await Exercise.find({language: lang});
+        const guidedList = buildGuidedList(exercises);
+        res.json(guidedList);
+    } catch (e) {
+        res.status(500).json({error: e.message});
+    }
 });
 
 routerExercises.get("/next/:index", async (req, res) => {
@@ -93,14 +129,7 @@ routerExercises.get("/next/:index", async (req, res) => {
 
     try {
         const exercises = await Exercise.find({language: lang});
-
-        const guidedList = representationsOrder.flatMap(rep => networkOrder.flatMap(network => exercises
-            .filter(ex => ex.networkType === network)
-            .map(ex => ({
-                ...ex.toObject(), representation: rep
-            })))).map((item, index) => ({
-            ...item, index
-        }));
+        const guidedList = buildGuidedList(exercises);
 
         const nextExercise = guidedList[parseInt(index) + 1] || null;
 
